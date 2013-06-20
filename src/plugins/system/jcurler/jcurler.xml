@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" version="2.5" method="upgrade" group="system" >
+    <name>System - JCurler</name>
+    <author>David Jardin</author>
+    <creationDate>%%CURRENTDATE%%</creationDate>
+    <copyright>(C) David Jardin - djumla. All rights reserved.</copyright>
+    <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
+    <authorEmail>info@djumla.de</authorEmail>
+    <authorUrl>www.djumla.de</authorUrl>
+    <version>0.1.0</version>
+    <description>PLG_SYSTEM_JCURLER_DESCRIPTION</description>
+    <files>
+        <filename plugin="jcurler">jcurler.php</filename>
+        <filename>httpCurlStream.php</filename>
+        <filename>updater.php</filename>
+        <filename>index.html</filename>
+    </files>
+    <languages>
+        <language tag="de-DE">language/de-DE.plg_system_jcurler.ini</language>
+        <language tag="de-DE">language/de-DE.plg_system_jcurler.sys.ini</language>
+        <language tag="en-GB">language/en-GB.plg_system_jcurler.ini</language>
+        <language tag="en-GB">language/en-GB.plg_system_jcurler.sys.ini</language>
+    </languages>
+</extension>
+

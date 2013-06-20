@@ -1,0 +1,1 @@
+This plugin makes the Joomla! Updater scripts in J! 2.5 compatible with curl

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="JCurler" default="dist">
+    <!-- ============================================  -->
+    <!-- Target: prepare                               -->
+    <!-- ============================================  -->
+    <target name="prepare">
+        <echo msg="Making directory ./build" />
+        <mkdir dir="./build" />
+
+        <echo msg="Making current timestamp" />
+        <tstamp>
+            <format property="zipstamp" pattern="%d%m%y%H%M%S" locale="de-DE" />
+        </tstamp>
+
+        <tstamp>
+            <format property="xmlstamp" pattern="%d.%m.%y" locale="de-DE" />
+        </tstamp>
+
+        <echo msg="fetching current version" />
+        <xmlproperty file="./src/plugins/system/jcurler/jcurler.xml" prefix="plg"/>
+    </target>
+
+    <!-- ============================================  -->
+    <!-- Target: build                                 -->
+    <!-- ============================================  -->
+    <target name="build" depends="prepare">
+        <echo msg="Deleting files from build directory" />
+        <delete dir="./build/plg" />
+
+        <echo msg="Copying files to build directory..." />
+
+        <echo msg="Copying plugin files" />
+        <copy todir="./build/plg">
+            <fileset dir="./src/plugins/system/jcurler">
+            </fileset>
+            <filterchain>
+                <replacetokens begintoken="%%" endtoken="%%">
+                    <token key="PLUGINVERSION" value="${plg.extension.version}" />
+                    <token key="CURRENTDATE" value="${xmlstamp}" />
+                </replacetokens>
+            </filterchain>
+        </copy>
+
+        <echo msg="Copying language folder" />
+        <copy todir="./build/plg/language">
+            <fileset dir="./src/administrator/language/de-DE">
+            </fileset>
+            <fileset dir="./src/administrator/language/en-GB">
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- ============================================  -->
+    <!-- (DEFAULT)  Target: dist                       -->
+    <!-- ============================================  -->
+    <target name="dist" depends="build">
+        <echo msg="Creating plugin archive..." />
+
+        <zip destfile="./build/plg_jcurler_${plg.extension.version}_${zipstamp}.zip">
+            <fileset dir="./build/plg">
+                <include name="*" />
+                <include name="**/*" />
+            </fileset>
+        </zip>
+
+        <echo msg="Files copied and compressed in build directory OK!" />
+    </target>
+</project>
