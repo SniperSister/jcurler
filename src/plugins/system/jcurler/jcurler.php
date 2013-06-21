@@ -16,6 +16,11 @@ defined('_JEXEC') or die;
  */
 class plgSystemJCurler extends JPlugin
 {
+    /**
+     *  execute main plugin code right after the initialise process is done
+     *
+     *  @return boolean
+     */
     function onAfterInitialise()
     {
         // get input object from application
@@ -25,25 +30,32 @@ class plgSystemJCurler extends JPlugin
         if((!ini_get('allow_url_fopen')
             && is_callable('curl_init')
             && JFactory::getApplication() instanceof JAdministrator
-            && $input->get('option','') == "com_installer")
+            && $input->get('option', '') == "com_installer")
             || $this->params->get('forced', 0))
         {
-            // require httpCurlStream class which works as our stream wrapper for http
-            require_once(JPATH_PLUGINS."/system/jcurler/httpCurlStream.php");
+            // include httpCurlStream which works as our stream wrapper for http
+            include_once JPATH_PLUGINS."/system/jcurler/library/httpCurlStream.php";
 
             $wrappers = stream_get_wrappers();
 
-            // Not specifying the STREAM_IS_URL parameters allow us to bypass limitations of allow_url_fopen = 0
-            if (array_search('http', $wrappers) !== false)
+            // Not specifying the STREAM_IS_URL parameters allow us
+            //to bypass limitations of allow_url_fopen = 0
+            if (array_search('http', $wrappers) !== false) {
                 stream_wrapper_unregister('http');
-            stream_wrapper_register('http', 'HTTPCurlStream');
+                stream_wrapper_register('http', 'HTTPCurlStream');
+            }
 
-            if (array_search('https', $wrappers) !== false)
+            if (array_search('https', $wrappers) !== false) {
                 stream_wrapper_unregister('https');
-            stream_wrapper_register('https', 'HTTPCurlStream');
+                stream_wrapper_register('https', 'HTTPCurlStream');
+            }
 
             // make the autoloader aware of our modified JUpdater class
-            JLoader::register('JUpdater', JPATH_PLUGINS."/system/jcurler/updater.php", true);
+            JLoader::register(
+                'JUpdater',
+                JPATH_PLUGINS."/system/jcurler/library/updater.php",
+                true
+            );
         }
     }
 }
