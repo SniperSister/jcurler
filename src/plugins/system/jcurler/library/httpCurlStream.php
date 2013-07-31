@@ -22,7 +22,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-class HTTPCurlStream
+class HTTPCurlStream implements IteratorAggregate, ArrayAccess
 {
     private $_path;
     private $_mode;
@@ -31,6 +31,7 @@ class HTTPCurlStream
     private $_buffer;
     private $_pos;
     private $_ch;
+    private $_metadata;
     public $context;
 
     /**
@@ -175,13 +176,13 @@ class HTTPCurlStream
         if (!empty($options['http']['curl_options'])
             && is_array($options['http']['curl_options'])
         ) {
-            $curl_options = $options['http']['curl_options'];
+            $curlOptions = $options['http']['curl_options'];
         } else {
-            $curl_options = array();
+            $curlOptions = array();
 
         }
 
-        $curl_options = array_replace(
+        $curlOptions = array_replace(
             array(
                 CURLOPT_FAILONERROR => true,
                 CURLOPT_FOLLOWLOCATION => true,
@@ -192,20 +193,89 @@ class HTTPCurlStream
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_USERAGENT => 'PHP / HTTPCurlStream',
                 CURLOPT_URL => $path,
+                CURLOPT_HEADER => 1
             ),
-            $curl_options
+            $curlOptions
         );
 
         if (defined('USE_PROXY') && USE_PROXY) {
-            $curl_options[CURLOPT_HTTPPROXYTUNNEL] = true;
-            $curl_options[CURLOPT_PROXY] = USE_PROXY;
+            $curlOptions[CURLOPT_HTTPPROXYTUNNEL] = true;
+            $curlOptions[CURLOPT_PROXY] = USE_PROXY;
         }
 
         $this->_ch = curl_init();
-        curl_setopt_array($this->_ch, $curl_options);
+        curl_setopt_array($this->_ch, $curlOptions);
 
-        $this->_buffer = curl_exec($this->_ch);
+        $response = curl_exec($this->_ch);
+
+        $headerSize = curl_getinfo($this->_ch, CURLINFO_HEADER_SIZE);
+        $header = substr($response, 0, $headerSize);
+
+        $this->_metadata = explode("\n", $header);
+        $this->_buffer = substr($response, $headerSize);
+
         $this->_pos = 0;
+
+    }
+
+    /**
+     * returns metadata array for stream_get_meta_data
+     *
+     * @return ArrayIterator|Traversable
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->_metadata);
+    }
+
+    /**
+     * returns metadata array for stream_get_meta_data
+     *
+     * @param string $offset array key
+     *
+     * @return boolean
+     */
+    public function offsetExists($offset)
+    {
+        return array_key_exists($offset, $this->_metadata);
+    }
+
+    /**
+     * gets metadata value
+     *
+     * @param string $offset array key
+     *
+     * @return boolean
+     */
+    public function offsetGet($offset )
+    {
+        return $this->_metadata[$offset];
+
+    }
+
+    /**
+     * sets metadata value
+     *
+     * @param string $offset array key
+     * @param string $value  new value
+     *
+     * @return void
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->_metadata[$offset] = $value;
+    }
+
+    /**
+     * unsets metadata key
+     *
+     * @param string $offset array key
+     *
+     * @return void
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->_metadata[$offset]);
     }
 
 }
