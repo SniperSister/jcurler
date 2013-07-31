@@ -1,18 +1,23 @@
 <?php
 /**
- * @version     %%PLUGINVERSION%%
- * @package     JCurler
- * @copyright   Copyright (C) 2013 David Jardin - djumla Webentwicklung
- * @license     GNU GPLv3 <http://www.gnu.org/licenses/gpl.html>
- * @link        http://www.djumla.de
+ * @version   %%PLUGINVERSION%%
+ * @package   JCurler
+ * @copyright 2013 David Jardin - djumla Webentwicklung
+ * @license   GNU GPLv3 <http://www.gnu.org/licenses/gpl.html>
+ * @link      http://www.djumla.de
  */
 
 // no direct access
 defined('_JEXEC') or die;
 
 /**
- * JCurler Plugin Class
+ * Class plgSystemJCurler
  *
+ * @category JCurler
+ * @package  JCurler
+ * @author   David Jardin <d.jardin@djumla.de>
+ * @license  GNU GPLv3 <http://www.gnu.org/licenses/gpl.html>
+ * @link     http://www.djumla.de
  */
 class plgSystemJCurler extends JPlugin
 {
@@ -27,12 +32,12 @@ class plgSystemJCurler extends JPlugin
         $input = JFactory::getApplication()->input;
 
         // make sure that we really need this functionality
-        if((!ini_get('allow_url_fopen')
+        if (!ini_get('allow_url_fopen')
             && is_callable('curl_init')
-            && JFactory::getApplication() instanceof JAdministrator
+            && (JFactory::getApplication() instanceof JAdministrator
             && $input->get('option', '') == "com_installer")
-            || $this->params->get('forced', 0))
-        {
+            || $this->params->get('forced', 0)
+        ) {
             // include httpCurlStream which works as our stream wrapper for http
             include_once JPATH_PLUGINS."/system/jcurler/library/httpCurlStream.php";
 
@@ -50,7 +55,7 @@ class plgSystemJCurler extends JPlugin
                 stream_wrapper_register('https', 'HTTPCurlStream');
             }
 
-            // make the autoloader aware of our modified JUpdater class
+            // make the auto loader aware of our modified JUpdater class
             JLoader::register(
                 'JUpdater',
                 JPATH_PLUGINS."/system/jcurler/library/updater.php",
