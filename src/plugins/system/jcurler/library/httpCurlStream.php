@@ -6,7 +6,6 @@
  */
 
 /**
- *
  * Authors :		Christophe Dri
  * Inspired by:		Thomas Rabaix
  *
@@ -23,94 +22,110 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-class HTTPCurlStream {
-
-    private $path;
-    private $mode;
-    private $options;
-    private $opened_path;
-    private $buffer;
-    private $pos;
+class HTTPCurlStream implements IteratorAggregate, ArrayAccess
+{
+    private $_path;
+    private $_mode;
+    private $_options;
+    private $_opened_path;
+    private $_buffer;
+    private $_pos;
+    private $_ch;
+    private $_metadata;
     public $context;
 
     /**
      * Open the stream
      *
-     * @param unknown_type $path
-     * @param unknown_type $mode
-     * @param unknown_type $options
-     * @param unknown_type $opened_path
-     * @return unknown
+     * @param string $path         path to open
+     * @param string $mode         readonly or writeable
+     * @param array  $options      array of options
+     * @param string &$opened_path already openend path
+     *
+     * @return  boolean
      */
-    public function stream_open($path, $mode, $options, &$opened_path) {
-        $this->path = $path;
-        $this->mode = $mode;
-        $this->options = $options;
-        $this->opened_path = $opened_path;
-        $this->createBuffer($path);
+    public function stream_open($path, $mode, $options, &$opened_path)
+    {
+        $this->_path = $path;
+        $this->_mode = $mode;
+        $this->_options = $options;
+        $this->_opened_path = $opened_path;
+        $this->_createBuffer($path);
         return true;
     }
 
     /**
      * Close the stream
      *
+     * @return void
      */
-    public function stream_close() {
-        curl_close($this->ch);
+    public function stream_close()
+    {
+        curl_close($this->_ch);
     }
 
     /**
      * Read the stream
      *
      * @param int $count number of bytes to read
-     * @return content from pos to count
+     *
+     * @return string content from pos to count
      */
-    public function stream_read($count) {
-        if (strlen($this->buffer) == 0) {
+    public function stream_read($count)
+    {
+        if (strlen($this->_buffer) == 0) {
             return false;
         }
-        $read = substr($this->buffer, $this->pos, $count);
-        $this->pos += $count;
+        $read = substr($this->_buffer, $this->_pos, $count);
+        $this->_pos += $count;
         return $read;
     }
 
     /**
-     * write the stream
+     * write the stream, not implemented!
      *
-     * @param int $count number of bytes to read
-     * @return content from pos to count
+     * @return boolean
      */
-    public function stream_write($data) {
-        if (strlen($this->buffer) == 0) {
+    public function stream_write()
+    {
+        if (strlen($this->_buffer) == 0) {
             return false;
         }
         return true;
     }
 
     /**
+     * checks for end of file
      *
-     * @return true if eof else false
+     * @return boolean true if eof else false
      */
-    public function stream_eof() {
-        if ($this->pos >= strlen($this->buffer)) {
+    public function stream_eof()
+    {
+        if ($this->_pos >= strlen($this->_buffer)) {
             return true;
         }
         return false;
     }
 
     /**
+     * returns current position of read pointer
+     *
      * @return int the position of the current read pointer
      */
-    public function stream_tell() {
-        return $this->pos;
+    public function stream_tell()
+    {
+        return $this->_pos;
     }
 
     /**
      * Flush stream data
+     *
+     * @return void
      */
-    public function stream_flush() {
-        $this->buffer = null;
-        $this->pos = null;
+    public function stream_flush()
+    {
+        $this->_buffer = null;
+        $this->_pos = null;
     }
 
     /**
@@ -118,10 +133,11 @@ class HTTPCurlStream {
      *
      * @return array stat information
      */
-    public function stream_stat() {
-        $this->createBuffer($this->path);
+    public function stream_stat()
+    {
+        $this->_createBuffer($this->_path);
         $stat = array(
-            'size' => strlen($this->buffer),
+            'size' => strlen($this->_buffer),
         );
         return $stat;
     }
@@ -129,12 +145,15 @@ class HTTPCurlStream {
     /**
      * Stat the url, return only the size of the buffer
      *
+     * @param string $path path
+     *
      * @return array stat information
      */
-    public function url_stat($path, $flags) {
-        $this->createBuffer($path);
+    public function url_stat($path)
+    {
+        $this->_createBuffer($path);
         $stat = array(
-            'size' => strlen($this->buffer),
+            'size' => strlen($this->_buffer),
         );
         return $stat;
     }
@@ -142,20 +161,29 @@ class HTTPCurlStream {
     /**
      * Create the buffer by requesting the url through cURL
      *
-     * @param unknown_type $path
+     * @param string $path path to read
+     *
+     * @return void
      */
-    private function createBuffer($path) {
-        if ($this->buffer)
+    private function _createBuffer($path)
+    {
+        if ($this->_buffer) {
             return;
+        }
 
         $options = stream_context_get_options($this->context);
 
-        if (!empty($options['http']['curl_options']) && is_array($options['http']['curl_options']))
-            $curl_options = $options['http']['curl_options'];
-        else
-            $curl_options = array();
+        if (!empty($options['http']['curl_options'])
+            && is_array($options['http']['curl_options'])
+        ) {
+            $curlOptions = $options['http']['curl_options'];
+        } else {
+            $curlOptions = array();
 
-        $curl_options = array_replace(array(
+        }
+
+        $curlOptions = array_replace(
+            array(
                 CURLOPT_FAILONERROR => true,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_RETURNTRANSFER => true,
@@ -165,18 +193,89 @@ class HTTPCurlStream {
                 CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_USERAGENT => 'PHP / HTTPCurlStream',
                 CURLOPT_URL => $path,
-            ), $curl_options);
+                CURLOPT_HEADER => 1
+            ),
+            $curlOptions
+        );
 
         if (defined('USE_PROXY') && USE_PROXY) {
-            $curl_options[CURLOPT_HTTPPROXYTUNNEL] = true;
-            $curl_options[CURLOPT_PROXY] = USE_PROXY;
+            $curlOptions[CURLOPT_HTTPPROXYTUNNEL] = true;
+            $curlOptions[CURLOPT_PROXY] = USE_PROXY;
         }
 
-        $this->ch = curl_init();
-        curl_setopt_array($this->ch, $curl_options);
+        $this->_ch = curl_init();
+        curl_setopt_array($this->_ch, $curlOptions);
 
-        $this->buffer = curl_exec($this->ch);
-        $this->pos = 0;
+        $response = curl_exec($this->_ch);
+
+        $headerSize = curl_getinfo($this->_ch, CURLINFO_HEADER_SIZE);
+        $header = substr($response, 0, $headerSize);
+
+        $this->_metadata = explode("\n", $header);
+        $this->_buffer = substr($response, $headerSize);
+
+        $this->_pos = 0;
+
+    }
+
+    /**
+     * returns metadata array for stream_get_meta_data
+     *
+     * @return ArrayIterator|Traversable
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->_metadata);
+    }
+
+    /**
+     * returns metadata array for stream_get_meta_data
+     *
+     * @param string $offset array key
+     *
+     * @return boolean
+     */
+    public function offsetExists($offset)
+    {
+        return array_key_exists($offset, $this->_metadata);
+    }
+
+    /**
+     * gets metadata value
+     *
+     * @param string $offset array key
+     *
+     * @return boolean
+     */
+    public function offsetGet($offset )
+    {
+        return $this->_metadata[$offset];
+
+    }
+
+    /**
+     * sets metadata value
+     *
+     * @param string $offset array key
+     * @param string $value  new value
+     *
+     * @return void
+     */
+    public function offsetSet($offset, $value)
+    {
+        $this->_metadata[$offset] = $value;
+    }
+
+    /**
+     * unsets metadata key
+     *
+     * @param string $offset array key
+     *
+     * @return void
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->_metadata[$offset]);
     }
 
 }

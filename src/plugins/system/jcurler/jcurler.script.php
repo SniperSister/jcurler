@@ -1,49 +1,63 @@
 <?php
 /**
- * @version     %%PLUGINVERSION%%
- * @package     JCurler
- * @copyright   Copyright (C) 2013 David Jardin - djumla Webentwicklung
- * @license     GNU GPLv3 <http://www.gnu.org/licenses/gpl.html>
- * @link        http://www.djumla.de
+ * @version    %%PLUGINVERSION%%
+ * @package    JCurler
+ * @copyright  2013 David Jardin - djumla Webentwicklung
+ * @license    GNU GPLv3 <http://www.gnu.org/licenses/gpl.html>
+ * @link       http://www.djumla.de
  */
 
 // No direct access to this file
 defined('_JEXEC') or die('Restricted access');
 
-class plgsystemjcurlerInstallerScript
+/**
+ * Class PlgSystemJcurlerInstallerScript
+ *
+ * @category  JCurler
+ * @package   JCurler
+ * @author    David Jardin <d.jardin@djumla.de>
+ * @license   GNU GPLv3 <http://www.gnu.org/licenses/gpl.html>
+ * @link      http://www.djumla.de
+ * @since     1.0.0
+ */
+class PlgSystemJcurlerInstallerScript
 {
     /**
      * Called before any type of action
      *
-     * @param   string  $type  Which action is happening (install|uninstall|discover_install)
-     * @param   JAdapterInstance  $parent  The object responsible for running this script
-     *
      * @return  boolean  True on success
      */
-    public function preflight($type, JAdapterInstance $parent) {
+    public function preflight($type)
+    {
         // make version check only when installing the plugin
-        if($type != "discover_install" && $type != "install")
+        if ($type != "discover_install" && $type != "install")
         {
             return true;
         }
+        
+        $version = new JVersion;
 
-        $version = new JVersion();
-
-        // abort if the current Joomla release is older
-        if( version_compare( $version->getShortVersion(), "2.5.7", 'lt' ) ) {
+        // Abort if the current Joomla release is older
+        if (version_compare($version->getShortVersion(), "2.5.7", 'lt'))
+        {
             Jerror::raiseWarning(null, 'Cannot install JCurler in a Joomla release prior to 2.5.7');
+
             return false;
         }
 
-        // abort if the current Joomla release is newer
-        if( version_compare( $version->getShortVersion(), "2.5.14", 'gt' ) ) {
+        // Abort if the current Joomla release is newer
+        if (version_compare($version->getShortVersion(), "2.5.14", 'gt'))
+        {
             Jerror::raiseWarning(null, 'Cannot install JCurler in Joomla 2.5.15 or later');
+
             return false;
         }
 
-        // abort if curl is not installed
-        if( !is_callable('curl_init')) {
-            Jerror::raiseWarning(null, 'This plugin requires cURL - please install it first');
+        // Abort if curl is not installed
+        if (!is_callable('curl_init'))
+        {
+            Jerror::raiseWarning(null, 'This plugin requires cURL - please active it');
+
             return false;
         }
 
