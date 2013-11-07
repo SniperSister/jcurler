@@ -26,6 +26,21 @@ class plgSystemJCurler extends JPlugin
         // get input object from application
         $input = JFactory::getApplication()->input;
 
+        // version check
+        $version = new JVersion();
+
+        // abort if the current Joomla release is older
+        if( version_compare( $version->getShortVersion(), "2.5.7", 'lt' ) ) {
+            Jerror::raiseWarning(null, 'Cannot use JCurler in a Joomla release prior to 2.5.7');
+            return false;
+        }
+
+        // abort if the current Joomla release is newer
+        if( version_compare( $version->getShortVersion(), "2.5.14", 'gt' ) ) {
+            Jerror::raiseWarning(null, 'Cannot use JCurler in Joomla 2.5.15 or later');
+            return false;
+        }
+
         // make sure that we really need this functionality
         if((!ini_get('allow_url_fopen')
             && is_callable('curl_init')

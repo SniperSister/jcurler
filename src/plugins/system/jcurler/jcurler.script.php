@@ -21,6 +21,12 @@ class plgsystemjcurlerInstallerScript
      * @return  boolean  True on success
      */
     public function preflight($type, JAdapterInstance $parent) {
+        // make version check only when installing the plugin
+        if($type != "discover_install" && $type != "install")
+        {
+            return true;
+        }
+
         $version = new JVersion();
 
         // abort if the current Joomla release is older
@@ -30,8 +36,8 @@ class plgsystemjcurlerInstallerScript
         }
 
         // abort if the current Joomla release is newer
-        if( version_compare( $version->getShortVersion(), "2.6.0", 'gt' ) ) {
-            Jerror::raiseWarning(null, 'Cannot install JCurler in Joomla 3.x or later');
+        if( version_compare( $version->getShortVersion(), "2.5.14", 'gt' ) ) {
+            Jerror::raiseWarning(null, 'Cannot install JCurler in Joomla 2.5.15 or later');
             return false;
         }
 
