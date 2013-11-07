@@ -25,6 +25,8 @@ class PlgSystemJcurlerInstallerScript
     /**
      * Called before any type of action
      *
+     * @param  string  $type  type of current action
+     *
      * @return  boolean  True on success
      */
     public function preflight($type)
