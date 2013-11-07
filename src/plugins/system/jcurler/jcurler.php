@@ -37,13 +37,11 @@ class PlgSystemJCurler extends JPlugin
 
         // abort if the current Joomla release is older
         if( version_compare( $version->getShortVersion(), "2.5.7", 'lt' ) ) {
-            Jerror::raiseWarning(null, 'Cannot use JCurler in a Joomla release prior to 2.5.7');
             return false;
         }
 
         // abort if the current Joomla release is newer
         if( version_compare( $version->getShortVersion(), "2.5.14", 'gt' ) ) {
-            Jerror::raiseWarning(null, 'Cannot use JCurler in Joomla 2.5.15 or later');
             return false;
         }
         
